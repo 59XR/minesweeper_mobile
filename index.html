@@ -7,35 +7,36 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <style>
+        /* 基础样式 */
         body {
             margin: 0;
             padding: 0;
-            width: 390px;  /* iPhone 13 标准宽度 */
-            height: 844px; /* iPhone 13 标准高度 */
-            margin: 0 auto;
             background-image: url('image/background.png');
             background-position: center -68px;
             background-size: 390px auto;
             background-repeat: no-repeat;
             background-color: white;
-            position: relative;
-            overflow: hidden;
         }
 
-        /* 添加安全区域的padding */
-        @supports (padding: max(0px)) {
-            body {
-                padding-top: env(safe-area-inset-top);
-                padding-bottom: env(safe-area-inset-bottom);
+        /* iPhone 13 专用样式 */
+        @media screen and (width: 390px) and (height: 844px) {
+            .container {
+                position: absolute;
+                top: calc(50% - 25px);
+                left: calc(50% - 3px);
+                transform: translate(-50%, -50%);
+                width: 351px;
             }
-        }
 
-        .container {
-            position: absolute;
-            top: calc(50% - 25px);
-            left: calc(50% - 3px);
-            transform: translate(-50%, -50%);
-            width: 351px;  /* 固定宽度 */
+            button.restart-button {
+                top: 13px;
+                left: 109px;
+            }
+
+            .timer-container {
+                top: 18px;
+                left: 107px;
+            }
         }
 
         .board {
