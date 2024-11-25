@@ -1,1 +1,700 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>扫雷</title>
+    <meta name="viewport" content="width=390, height=844, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: calc(100vh - 68px);
+            background-image: url('image/background.png');
+            background-position: center -68px;
+            background-size: 390px auto;
+            background-repeat: no-repeat;
+            background-color: white;
+        }
 
+        .container {
+            position: absolute;
+            top: calc(50% - 25px);
+            left: calc(50% - 3px);
+            transform: translate(-50%, -50%);
+            width: 351px;
+        }
+
+        .board {
+            width: 351px;
+            margin: 10px auto;
+            font-size: 0;
+            line-height: 0;
+            border: 2px solid #7B7A7A;
+            box-sizing: border-box;
+        }
+
+        .row {
+            display: flex;
+            justify-content: center;
+            height: 43.875px;  /* 351px / 8 */
+        }
+
+        .cell {
+            width: 43.875px;  /* 351px / 8 */
+            height: 43.875px;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        button.restart-button {
+            padding: 0;
+            border: none;
+            background: none;
+            cursor: pointer;
+            width: 143.856px;
+            height: 47.952px;
+            background-image: url('image/button.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            -webkit-tap-highlight-color: transparent;
+            margin: 10px auto;
+            position: relative;
+            left: 109px;
+            top: 13px;
+        }
+
+        .timer-container {
+            margin: 10px 0;
+            font-size: 12.8px;
+            text-align: left;
+            color: #C3EE15;
+            position: relative;
+            left: 107px;
+            top: 18px;
+        }
+
+        .cell:not(.revealed):not(.flagged-cat):not(.flagged-poop) {
+            background-image: url('image/lattice.png');
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent;
+        }
+
+        .cell.revealed {
+            background-color: #BFC3AB;
+            border: 1px solid #999;
+        }
+
+        .cell.revealed[data-number="1"] {
+            color: #085DA3;
+        }
+
+        .cell.revealed[data-number="2"] {
+            color: #687E0F;
+        }
+
+        .cell.revealed[data-number="3"] {
+            color: #D75E0E;
+        }
+
+        .cell.revealed[data-number="4"] {
+            color: #BE0909;
+        }
+
+        .cell.mine {
+            background-color: #FE6F08;
+            background-image: url('image/boom.png');
+            background-size: 70% 70%;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .cell.flagged-cat {
+            background-image: url('image/cat.png'), url('image/lattice.png');
+            background-size: 64% 64%, 100% 100%;
+            background-position: center, center;
+            background-repeat: no-repeat, no-repeat;
+            background-color: transparent;
+        }
+
+        .cell.flagged-poop {
+            background-color: #2196F3;
+        }
+
+        button {
+            padding: 8px 16px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            border: 1px solid #999;
+            background-color: #ffeb3b;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #timer, #current-record {
+            font-weight: bold;
+            color: #C3EE15;
+        }
+
+        h1 {
+            margin: 10px 0;
+            font-size: 24px;
+        }
+
+        /* 确保所有元素可点击 */
+        * {
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .board, .cell, button {
+            cursor: pointer;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: none;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fefefe;
+            padding: 20px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 300px;
+            text-align: center;
+        }
+
+        button.restart-button:active {
+            transform: scale(0.95);
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 10px 0;
+        }
+
+        .win-cat {
+            width: min(8vw, 30px);
+            height: min(8vw, 30px);
+            vertical-align: middle;
+            margin: 0 5px;
+        }
+
+        /* 添加移动端适配 */
+        @media screen and (max-width: 428px) {
+            body {
+                min-height: 100vh;
+                background-size: 100% auto;
+                background-position: center -68px;
+            }
+
+            .container {
+                position: absolute;
+                top: calc(50% - 129px);
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 90%;
+            }
+
+            .board {
+                width: calc(390px * 0.9);
+                margin: 10px auto;
+            }
+
+            .row {
+                height: calc(390px * 0.9 / 8);
+            }
+
+            .cell {
+                width: calc(390px * 0.9 / 8);
+                height: calc(390px * 0.9 / 8);
+            }
+
+            button.restart-button {
+                width: 143.856px;
+                height: 47.952px;
+                left: 119px;
+                top: 12px;
+            }
+
+            .timer-container {
+                left: 117px;
+                top: 7px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <button class="restart-button" onclick="newGame()"></button>
+            <div class="timer-container">
+                <div>当前用时：<span id="timer">0</span>秒</div>
+                <div>最佳记录：<span id="current-record">暂无</span></div>
+            </div>
+        </div>
+        <div id="board" class="board"></div>
+    </div>
+
+    <div id="winModal" class="modal">
+        <div class="modal-content">
+            <h2><img src="image/cat.png" class="win-cat"> 恭喜你了！ <img src="image/cat.png" class="win-cat"></h2>
+            <p>你成功找出了所有地雷！</p>
+            <p>用时：<span id="finalTime"></span>秒</p>
+            <button class="close-button" onclick="closeWinModal()">继续游戏</button>
+        </div>
+    </div>
+
+    <script>
+        // Minesweeper 类持不变，但构造函数中的默认值改为 8x10
+        class Minesweeper {
+            constructor(width = 8, height = 10, numMines = 10) {
+                this.width = width;
+                this.height = height;
+                this.numMines = numMines;
+                this.board = Array(height).fill().map(() => Array(width).fill(0));
+                this.visible = Array(height).fill().map(() => Array(width).fill(false));
+                this.flags = Array(height).fill().map(() => Array(width).fill(0));
+                this.gameOver = false;
+                this.placeMines();
+                this.calculateNumbers();
+            }
+
+            // ... 其他方法保持不变，但需要把 this.size 改为 this.width 或 this.height ...
+            // 这里是修改后的 placeMines 示例：
+            placeMines() {
+                let minesPlaced = 0;
+                while (minesPlaced < this.numMines) {
+                    const x = Math.floor(Math.random() * this.width);
+                    const y = Math.floor(Math.random() * this.height);
+                    if (this.board[y][x] !== -1) {
+                        this.board[y][x] = -1;
+                        minesPlaced++;
+                    }
+                }
+            }
+
+            // 其他方法也需要类似的修改，把所有涉及小的方都改成使用 width 和 height
+            // ... 其他方法的实现 ...
+
+            calculateNumbers() {
+                for (let i = 0; i < this.height; i++) {
+                    for (let j = 0; j < this.width; j++) {
+                        if (this.board[i][j] === -1) continue;
+                        let count = 0;
+                        for (let di = -1; di <= 1; di++) {
+                            for (let dj = -1; dj <= 1; dj++) {
+                                const ni = i + di;
+                                const nj = j + dj;
+                                if (ni >= 0 && ni < this.height && nj >= 0 && nj < this.width) {
+                                    if (this.board[ni][nj] === -1) count++;
+                                }
+                            }
+                        }
+                        this.board[i][j] = count;
+                    }
+                }
+            }
+
+            isValidMove(x, y) {
+                return x >= 0 && x < this.height && y >= 0 && y < this.width;
+            }
+
+            toggleFlag(x, y) {
+                if (!this.isValidMove(x, y) || this.visible[x][y] || this.gameOver) return;
+                this.flags[x][y] = (this.flags[x][y] + 1) % 3;
+            }
+
+            makeMove(x, y) {
+                if (!this.isValidMove(x, y) || this.flags[x][y] !== 0) return false;
+                if (this.visible[x][y]) return false;
+
+                this.visible[x][y] = true;
+
+                if (this.board[x][y] === -1) {
+                    this.gameOver = true;
+                    return false;
+                }
+
+                if (this.board[x][y] === 0) {
+                    this.revealEmpty(x, y);
+                }
+
+                if (this.checkWin()) {
+                    this.gameOver = true;
+                    return true;
+                }
+
+                return true;
+            }
+
+            revealEmpty(x, y) {
+                for (let di = -1; di <= 1; di++) {
+                    for (let dj = -1; dj <= 1; dj++) {
+                        const ni = x + di;
+                        const nj = y + dj;
+                        if (this.isValidMove(ni, nj) && !this.visible[ni][nj] && this.flags[ni][nj] === 0) {
+                            this.makeMove(ni, nj);
+                        }
+                    }
+                }
+            }
+
+            checkWin() {
+                for (let i = 0; i < this.height; i++) {
+                    for (let j = 0; j < this.width; j++) {
+                        if (this.board[i][j] !== -1 && !this.visible[i][j]) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+
+            revealAllMines() {
+                for (let i = 0; i < this.height; i++) {
+                    for (let j = 0; j < this.width; j++) {
+                        if (this.board[i][j] === -1) {
+                            this.visible[i][j] = true;
+                        }
+                    }
+                }
+            }
+
+            countFlagsAround(x, y) {
+                let count = 0;
+                for (let di = -1; di <= 1; di++) {
+                    for (let dj = -1; dj <= 1; dj++) {
+                        const ni = x + di;
+                        const nj = y + dj;
+                        if (this.isValidMove(ni, nj) && this.flags[ni][nj] === 1) {  // 只猫咪标记
+                            count++;
+                        }
+                    }
+                }
+                return count;
+            }
+
+            revealAround(x, y) {
+                // 只有已经显示的数字格子才能触发这个功能
+                if (!this.visible[x][y] || this.board[x][y] <= 0) return false;
+
+                // 检查周围的猫咪标记数量是否等于格子上的数字
+                const flagCount = this.countFlagsAround(x, y);
+                console.log('Flags:', flagCount, 'Number:', this.board[x][y]); // 添加调试信息
+                
+                if (flagCount === this.board[x][y]) {
+                    let hitMine = false;
+                    // 揭示周围未标记的格子
+                    for (let di = -1; di <= 1; di++) {
+                        for (let dj = -1; dj <= 1; dj++) {
+                            const ni = x + di;
+                            const nj = y + dj;
+                            if (this.isValidMove(ni, nj) && !this.visible[ni][nj] && this.flags[ni][nj] === 0) {
+                                if (this.board[ni][nj] === -1) {
+                                    hitMine = true;
+                                    this.visible[ni][nj] = true;
+                                } else {
+                                    this.makeMove(ni, nj);
+                                }
+                            }
+                        }
+                    }
+                    if (hitMine) {
+                        this.gameOver = true;
+                        this.revealAllMines();
+                        return false;
+                    }
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        let game;
+        let timer = null;
+        let startTime = null;
+        let currentTime = 0;
+        let firstMove = true;
+        let bestRecord = Infinity;
+
+        // 加载记录
+        function loadRecord() {
+            const savedRecord = localStorage.getItem('minesweeper-mobile-record');
+            if (savedRecord) {
+                bestRecord = parseInt(savedRecord);
+                updateRecordDisplay();
+            } else {
+                document.getElementById('current-record').textContent = '暂无';
+            }
+        }
+
+        // 更新记录显示
+        function updateRecordDisplay() {
+            const recordElement = document.getElementById('current-record');
+            if (bestRecord === Infinity) {
+                recordElement.textContent = '暂无';
+            } else {
+                recordElement.textContent = bestRecord + '秒';
+            }
+        }
+
+        // 新记录
+        function updateRecord() {
+            if (currentTime < bestRecord) {
+                bestRecord = currentTime;
+                updateRecordDisplay();
+                localStorage.setItem('minesweeper-mobile-record', bestRecord.toString());
+            }
+        }
+
+        // ... 其他函数保持不变 ...
+
+        function newGame() {
+            resetTimer();
+            game = new Minesweeper(8, 10, 10);  // 固定为 8x10 大小，10地雷
+            renderBoard();
+        }
+
+        // ... 其他数保持不变 ...
+
+        function renderBoard() {
+            const boardElement = document.getElementById('board');
+            const oldBoard = boardElement.cloneNode(false);
+            
+            for (let i = 0; i < game.height; i++) {
+                const rowElement = document.createElement('div');
+                rowElement.className = 'row';
+                
+                for (let j = 0; j < game.width; j++) {
+                    const cellElement = document.createElement('div');
+                    cellElement.className = 'cell';
+                    
+                    if (game.visible[i][j]) {
+                        cellElement.classList.add('revealed');
+                        if (game.board[i][j] === -1) {
+                            cellElement.classList.add('mine');
+                        } else if (game.board[i][j] > 0) {
+                            cellElement.textContent = game.board[i][j];
+                            cellElement.setAttribute('data-number', game.board[i][j]);
+                        }
+                    } else if (game.flags[i][j] === 1) {
+                        cellElement.classList.add('flagged-cat');
+                    } else if (game.flags[i][j] === 2) {
+                        cellElement.classList.add('flagged-poop');
+                        cellElement.textContent = '💩';
+                    }
+                    
+                    addCellListeners(cellElement, i, j);
+                    rowElement.appendChild(cellElement);
+                }
+                
+                oldBoard.appendChild(rowElement);
+            }
+            
+            boardElement.parentNode.replaceChild(oldBoard, boardElement);
+        }
+
+        function addCellListeners(cellElement, i, j) {
+            let lastTap = 0;
+            const doubleTapDelay = 300;  // 双击判定时间（毫秒）
+            let touchStartTime = 0;
+            const longPressDelay = 500;  // 长按判定时间（毫秒）
+            let touchTimer = null;
+
+            // 处理触摸事件
+            cellElement.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                touchStartTime = Date.now();
+                touchTimer = setTimeout(() => {
+                    // 长按标记
+                    if (!game.flags[i][j]) {
+                        game.flags[i][j] = 1;  // 添加猫咪标记
+                    } else {
+                        game.flags[i][j] = 0;  // 取消标记
+                    }
+                    renderBoard();
+                }, longPressDelay);
+            });
+
+            cellElement.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                clearTimeout(touchTimer);
+                
+                const currentTime = Date.now();
+                const touchDuration = currentTime - touchStartTime;
+                const tapLength = currentTime - lastTap;
+
+                if (touchDuration < longPressDelay) {  // 不是长按
+                    if (tapLength < doubleTapDelay && tapLength > 0) {
+                        // 双击标记
+                        if (!game.flags[i][j]) {
+                            game.flags[i][j] = 1;  // 添加猫咪标记
+                        } else {
+                            game.flags[i][j] = 0;  // 取消标记
+                        }
+                        renderBoard();
+                    } else if (!game.flags[i][j]) {
+                        // 单击揭示
+                        makeMove(i, j);
+                    }
+                }
+                
+                lastTap = currentTime;
+            });
+
+            cellElement.addEventListener('touchmove', (e) => {
+                clearTimeout(touchTimer);  // 如果手指移动，取消长按计时
+            });
+
+            // 保留电脑端的点击和右键功能
+            cellElement.addEventListener('click', () => {
+                if (!game.flags[i][j]) {
+                    makeMove(i, j);
+                }
+            });
+
+            cellElement.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                if (!game || game.gameOver) return;
+                
+                if (!game.flags[i][j]) {
+                    game.flags[i][j] = 1;
+                    renderBoard();
+                } else {
+                    game.flags[i][j] = 0;
+                    renderBoard();
+                }
+            });
+        }
+
+        function makeMove(x, y) {
+            if (!game || game.gameOver) return;
+            
+            if (firstMove) {
+                firstMove = false;
+                startTimer();
+            }
+            
+            // 如果点击的是已经显示的格子，尝试示周围
+            if (game.visible[x][y]) {
+                console.log('Clicking revealed cell:', x, y); // 添加调试信息
+                const result = game.revealAround(x, y);
+                renderBoard();
+                if (game.gameOver) {
+                    stopTimer();
+                    if (game.checkWin()) {
+                        updateRecord();
+                        showWinModal();
+                    } else {
+                        game.revealAllMines();
+                        renderBoard();
+                    }
+                }
+                return;
+            }
+            
+            // 如果点击的是未标记的格子
+            if (!game.flags[x][y]) {
+                console.log('Clicking unrevealed cell:', x, y); // 添加调试信息
+                game.makeMove(x, y);
+                renderBoard();
+                
+                if (game.gameOver) {
+                    stopTimer();
+                    if (game.checkWin()) {
+                        updateRecord();
+                        showWinModal();
+                    } else {
+                        game.revealAllMines();
+                        renderBoard();
+                    }
+                }
+            }
+        }
+
+        function handleRightClick(x, y, event) {
+            event.preventDefault();
+            if (!game || game.gameOver) return;
+            
+            game.toggleFlag(x, y);
+            renderBoard();
+        }
+
+        // 确保在页面加载时初始化游戏
+        window.onload = () => {
+            loadRecord();
+            newGame();
+        };
+
+        // 在 script 标签中添加这些函数
+        function startTimer() {
+            startTime = Date.now() - (currentTime * 1000);
+            timer = setInterval(updateTimer, 1000);
+        }
+
+        function updateTimer() {
+            currentTime = Math.floor((Date.now() - startTime) / 1000);
+            document.getElementById('timer').textContent = currentTime;
+        }
+
+        function stopTimer() {
+            if (timer) {
+                clearInterval(timer);
+                timer = null;
+            }
+        }
+
+        function resetTimer() {
+            stopTimer();
+            currentTime = 0;
+            firstMove = true;
+            document.getElementById('timer').textContent = '0';
+        }
+
+        function showWinModal() {
+            const modal = document.getElementById('winModal');
+            const finalTime = document.getElementById('finalTime');
+            finalTime.textContent = currentTime;
+            modal.style.display = 'block';
+        }
+
+        function closeWinModal() {
+            const modal = document.getElementById('winModal');
+            modal.style.display = 'none';
+            newGame();
+        }
+
+        // 添加防止iOS橡皮筋效果
+        document.body.addEventListener('touchmove', function(e) {
+            e.preventDefault();
+        }, { passive: false });
+    </script>
+</body>
+</html> 
