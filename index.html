@@ -20,7 +20,7 @@
 
         .container {
             position: absolute;
-            top: calc(50% - 25px);
+            top: calc(50% - 133px);
             left: calc(50% - 3px);
             transform: translate(-50%, -50%);
             width: 351px;
@@ -39,6 +39,8 @@
             display: flex;
             justify-content: center;
             height: 43.875px;  /* 351px / 8 */
+            font-size: 0;  /* 添加这行，消除间隙 */
+            line-height: 0;  /* 添加这行，消除间隙 */
         }
 
         .cell {
@@ -50,6 +52,7 @@
             justify-content: center;
             font-size: 16px;
             font-weight: bold;
+            box-sizing: border-box;  /* 添加这行 */
         }
 
         button.restart-button {
@@ -66,8 +69,8 @@
             -webkit-tap-highlight-color: transparent;
             margin: 10px auto;
             position: relative;
-            left: 109px;
-            top: 13px;
+            left: 119px;
+            top: 1px;
         }
 
         .timer-container {
@@ -76,8 +79,8 @@
             text-align: left;
             color: #C3EE15;
             position: relative;
-            left: 107px;
-            top: 18px;
+            left: 117px;
+            top: -4px;
         }
 
         .cell:not(.revealed):not(.flagged-cat):not(.flagged-poop) {
@@ -91,6 +94,9 @@
         .cell.revealed {
             background-color: #BFC3AB;
             border: 1px solid #999;
+            width: 43.875px;  /* 确保和未揭示的格子大小一致 */
+            height: 43.875px;
+            box-sizing: border-box;  /* 确保边框包含在尺寸内 */
         }
 
         .cell.revealed[data-number="1"] {
